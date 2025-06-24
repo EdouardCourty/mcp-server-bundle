@@ -46,6 +46,7 @@ class ResponseFactory
     {
         $json = $this->serializer->serialize($response, 'json', [
             AbstractObjectNormalizer::SKIP_NULL_VALUES => true,
+            AbstractObjectNormalizer::PRESERVE_EMPTY_OBJECTS => true,
         ]);
 
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);

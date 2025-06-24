@@ -28,8 +28,8 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('server')
                     ->addDefaultsIfNotSet()
                     ->children()
-                        ->stringNode('name')->defaultValue(self::DEFAULT_NAME)->end()
-                        ->stringNode('version')->defaultValue(self::DEFAULT_VERSION)->end()
+                        ->scalarNode('name')->defaultValue(self::DEFAULT_NAME)->end()
+                        ->scalarNode('version')->defaultValue(self::DEFAULT_VERSION)->end()
                     ->end()
                 ->end()
             ->end();
