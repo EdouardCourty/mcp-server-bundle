@@ -19,7 +19,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 #[AsMethodHandler(methodName: 'initialize')]
 class InitializeMethodHandler implements MethodHandlerInterface
 {
-    public const string PROTOCOL_VERSION = '2025-03-26';
+    public const string PROTOCOL_VERSION = '2024-11-05';
 
     public function __construct(
         private readonly string $serverName,
