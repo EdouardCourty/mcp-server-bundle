@@ -7,6 +7,7 @@ namespace Ecourty\McpServerBundle\Tests\MethodHandler;
 use Ecourty\McpServerBundle\Event\AbstractToolEvent;
 use Ecourty\McpServerBundle\Event\ToolCallEvent;
 use Ecourty\McpServerBundle\Event\ToolResultEvent;
+use Ecourty\McpServerBundle\Exception\ToolNotFoundException;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\MethodHandler\ToolsCallMethodHandler;
 use Ecourty\McpServerBundle\Service\InputSanitizer;
@@ -122,7 +123,7 @@ class ToolsCallMethodHandlerTest extends KernelTestCase
                 ],
             ),
             'events' => [],
-            'willThrow' => \InvalidArgumentException::class,
+            'willThrow' => ToolNotFoundException::class,
         ];
     }
 }

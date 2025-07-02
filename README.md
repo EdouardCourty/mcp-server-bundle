@@ -19,11 +19,14 @@ The current MCP protocol supported version is `2025-06-18`, which is the latest 
 > This bundle will evolve along with the specification, so please ensure you are using the latest version of the bundle.  
 > The CHANGELOG can be found [here](CHANGELOG.md).
 
+The MCP Server Bundle currently supports HTTP & STDIO as transports. 
+
 ## Table of Contents
 
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Configuration](#configuration)
+  - [Transports](#transports)
 - [Tools](#tools)
   - [Creating Tools](#creating-tools)
   - [Tool Results](#tool-results)
@@ -91,6 +94,30 @@ mcp_server:
     name: 'My MCP Server' # The name of your MCP server, used in the initialization response
     title: 'My MCP Server Display Name' # The title of your MCP server, used in the initialization response
     version: '1.0.0' # The version of your MCP server, used in the initialization response
+```
+
+### Transports
+
+This bundle adds support for HTTP and STDIO transports.
+
+#### HTTP
+
+HTTP support is featured using a controller, as stated in the [configuration](#configuration).
+
+#### STDIO
+
+STDIO transport is featured through a Symfony command:
+```bash
+$ bin/console mcp:stdio
+
+Description:
+  MCP server STDIO entrypoint
+
+Usage:
+  mcp:stdio <jsonrpc_request>
+
+Arguments:
+  jsonrpc_request       JSON-RPC request
 ```
 
 ## Tools
