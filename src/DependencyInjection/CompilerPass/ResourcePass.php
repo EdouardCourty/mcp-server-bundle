@@ -16,6 +16,12 @@ class ResourcePass implements CompilerPassInterface
     {
         $promptRegistry = $container->getDefinition(ResourceRegistry::class);
 
+        // Get configured server keys for validation
+        $configuredServers = $container->getParameter('mcp_server.configured_servers');
+        if (!\is_array($configuredServers)) {
+            $configuredServers = [];
+        }
+
         foreach ($container->getDefinitions() as $definition) {
             $class = $definition->getClass();
 
@@ -66,6 +72,16 @@ class ResourcePass implements CompilerPassInterface
                 ));
             }
 
+            // Validate server key at compile time
+            if ($attr->server !== null && !\in_array($attr->server, $configuredServers, true)) {
+                throw new \LogicException(\sprintf(
+                    'Resource "%s" references server "%s" which is not configured. Available servers: %s',
+                    $attr->name,
+                    $attr->server,
+                    implode(', ', $configuredServers),
+                ));
+            }
+
             $definition
                 ->addTag(name: 'mcp_server.resource', attributes: [
                     'uri' => $attr->uri,
@@ -78,7 +94,7 @@ class ResourcePass implements CompilerPassInterface
                     $attr->title,
                     $attr->description,
                     $attr->mimeType,
-                    $attr->size,
+                    $attr->server,
                 ]);
             } else {
                 $promptRegistry->addMethodCall(method: 'addDirectResourceDefinition', arguments: [
@@ -87,6 +103,8 @@ class ResourcePass implements CompilerPassInterface
                     $attr->title,
                     $attr->description,
                     $attr->mimeType,
+                    $attr->size,
+                    $attr->server,
                 ]);
             }
         }

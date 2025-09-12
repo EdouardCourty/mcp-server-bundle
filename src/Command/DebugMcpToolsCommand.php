@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ecourty\McpServerBundle\Command;
 
+use Ecourty\McpServerBundle\Service\ServerConfigurationRegistry;
 use Ecourty\McpServerBundle\Service\ToolRegistry;
 use Ecourty\McpServerBundle\Tool\ToolDefinition;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -28,6 +29,7 @@ class DebugMcpToolsCommand extends Command
 {
     public function __construct(
         private readonly ToolRegistry $toolRegistry,
+        private readonly ServerConfigurationRegistry $serverConfigurationRegistry,
     ) {
         parent::__construct();
     }
@@ -61,12 +63,16 @@ class DebugMcpToolsCommand extends Command
             return self::FAILURE;
         }
 
+        $serverKey = $this->toolRegistry->getToolServerKey($toolName);
+        $serverInfo = $serverKey ? $this->getServerDisplayName($serverKey) : 'Global (All servers)';
+
         $io->table(
-            ['Name', 'Description', 'Input Schema', 'Title', 'ReadOnly', 'Destructive', 'Idempotent', 'OpenWorld'],
+            ['Name', 'Description', 'Server', 'Input Schema', 'Title', 'ReadOnly', 'Destructive', 'Idempotent', 'OpenWorld'],
             [
                 [
                     $tool->name,
                     $tool->description,
+                    $serverInfo,
                     $tool->inputSchemaClass,
                     $tool->annotations['title'],
                     $tool->annotations['readOnlyHint'] ? 'Yes' : 'No',
@@ -93,16 +99,30 @@ class DebugMcpToolsCommand extends Command
         }
 
         $io->table(
-            ['Name', 'Description', 'Input Schema'],
-            array_map(static function (ToolDefinition $tool) {
+            ['Name', 'Description', 'Server', 'Input Schema'],
+            array_map(function (ToolDefinition $tool) {
+                $serverKey = $this->toolRegistry->getToolServerKey($tool->name);
+                $serverInfo = $serverKey ? $this->getServerDisplayName($serverKey) : 'Global (All servers)';
+
                 return [
                     $tool->name,
                     $tool->description,
+                    $serverInfo,
                     $tool->inputSchemaClass,
                 ];
             }, $tools),
         );
 
         return self::SUCCESS;
+    }
+
+    private function getServerDisplayName(string $serverKey): string
+    {
+        $serverConfig = $this->serverConfigurationRegistry->getServerConfiguration($serverKey);
+        if ($serverConfig === null) {
+            return $serverKey . ' (Not found)';
+        }
+
+        return \sprintf('%s (%s)', $serverConfig['name'], $serverKey);
     }
 }

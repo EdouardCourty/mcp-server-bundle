@@ -21,6 +21,9 @@ class ToolRegistry
     /** @var array<string, ToolDefinition> */
     private array $toolDefinitions = [];
 
+    /** @var array<string, string|null> Mapping of tool name to server key */
+    private array $toolToServerMapping = [];
+
     public function __construct(// @phpstan-ignore missingType.generics
         #[AutowireLocator(services: 'mcp_server.tool', indexAttribute: 'name')]
         private readonly ServiceLocator $toolLocator,
@@ -44,9 +47,31 @@ class ToolRegistry
     /**
      * @return ToolDefinition[]
      */
-    public function getToolsDefinitions(): array
+    public function getToolsDefinitions(?string $serverKey = null): array
     {
-        return array_values($this->toolDefinitions);
+        if ($serverKey === null) {
+            return array_values($this->toolDefinitions);
+        }
+
+        $filteredDefinitions = [];
+        foreach ($this->toolDefinitions as $name => $definition) {
+            $toolServerKey = $this->toolToServerMapping[$name] ?? null;
+
+            // Include tools that belong to the specified server or have no server specified (global tools)
+            if ($toolServerKey === null || $toolServerKey === $serverKey) {
+                $filteredDefinitions[] = $definition;
+            }
+        }
+
+        return $filteredDefinitions;
+    }
+
+    /**
+     * Get the server key for a specific tool.
+     */
+    public function getToolServerKey(string $toolName): ?string
+    {
+        return $this->toolToServerMapping[$toolName] ?? null;
     }
 
     /**
@@ -68,6 +93,7 @@ class ToolRegistry
         array $inputSchema,
         ?string $inputSchemaClass,
         array $annotations,
+        ?string $serverKey = null,
     ): void {
         if (isset($this->toolDefinitions[$name]) === true) {
             throw new \LogicException(\sprintf('Tool with name "%s" is already registered.', $name));
@@ -80,5 +106,7 @@ class ToolRegistry
             inputSchemaClass: $inputSchemaClass,
             annotations: $annotations,
         );
+
+        $this->toolToServerMapping[$name] = $serverKey;
     }
 }

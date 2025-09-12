@@ -23,6 +23,9 @@ class ResourceRegistry
     /** @var array<string, AbstractResourceDefinition> */
     private array $resourceDefinitions = [];
 
+    /** @var array<string, string|null> Mapping of resource URI to server key */
+    private array $resourceToServerMapping = [];
+
     public function __construct(// @phpstan-ignore missingType.generics
         #[AutowireLocator(services: 'mcp_server.resource', indexAttribute: 'uri')]
         private readonly ServiceLocator $resourceLocator,
@@ -46,9 +49,31 @@ class ResourceRegistry
     /**
      * @return AbstractResourceDefinition[]
      */
-    public function getResourceDefinitions(): array
+    public function getResourceDefinitions(?string $serverKey = null): array
     {
-        return array_values($this->resourceDefinitions);
+        if ($serverKey === null) {
+            return array_values($this->resourceDefinitions);
+        }
+
+        $filteredDefinitions = [];
+        foreach ($this->resourceDefinitions as $uri => $definition) {
+            $resourceServerKey = $this->resourceToServerMapping[$uri] ?? null;
+
+            // Include resources that belong to the specified server or have no server specified (global resources)
+            if ($resourceServerKey === null || $resourceServerKey === $serverKey) {
+                $filteredDefinitions[] = $definition;
+            }
+        }
+
+        return $filteredDefinitions;
+    }
+
+    /**
+     * Get the server key for a specific resource.
+     */
+    public function getResourceServerKey(string $uri): ?string
+    {
+        return $this->resourceToServerMapping[$uri] ?? null;
     }
 
     /**
@@ -61,6 +86,7 @@ class ResourceRegistry
         ?string $description = null,
         ?string $mimeType = null,
         ?string $size = null,
+        ?string $serverKey = null,
     ): void {
         $resourceDefinition = new DirectResourceDefinition(
             uri: $uri,
@@ -72,6 +98,7 @@ class ResourceRegistry
         );
 
         $this->resourceDefinitions[$uri] = $resourceDefinition;
+        $this->resourceToServerMapping[$uri] = $serverKey;
     }
 
     /**
@@ -83,6 +110,7 @@ class ResourceRegistry
         ?string $title = null,
         ?string $description = null,
         ?string $mimeType = null,
+        ?string $serverKey = null,
     ): void {
         $resourceDefinition = new TemplateResourceDefinition(
             uri: $uri,
@@ -93,5 +121,6 @@ class ResourceRegistry
         );
 
         $this->resourceDefinitions[$uri] = $resourceDefinition;
+        $this->resourceToServerMapping[$uri] = $serverKey;
     }
 }

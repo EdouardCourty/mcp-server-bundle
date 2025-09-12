@@ -22,6 +22,12 @@ class PromptPass implements CompilerPassInterface
     {
         $promptRegistry = $container->getDefinition(PromptRegistry::class);
 
+        // Get configured server keys for validation
+        $configuredServers = $container->getParameter('mcp_server.configured_servers');
+        if (!\is_array($configuredServers)) {
+            $configuredServers = [];
+        }
+
         foreach ($container->getDefinitions() as $definition) {
             $class = $definition->getClass();
 
@@ -80,6 +86,16 @@ class PromptPass implements CompilerPassInterface
                 ));
             }
 
+            // Validate server key at compile time
+            if ($attr->server !== null && !\in_array($attr->server, $configuredServers, true)) {
+                throw new \LogicException(\sprintf(
+                    'Prompt "%s" references server "%s" which is not configured. Available servers: %s',
+                    $attr->name,
+                    $attr->server,
+                    implode(', ', $configuredServers),
+                ));
+            }
+
             $definition
                 ->addTag(name: 'mcp_server.prompt', attributes: [
                     'name' => $attr->name,
@@ -89,6 +105,7 @@ class PromptPass implements CompilerPassInterface
                 $attr->name,
                 $attr->description,
                 array_map(fn (Argument $argument) => $argument->toArray(), $attr->getArguments()),
+                $attr->server,
             ]);
         }
     }

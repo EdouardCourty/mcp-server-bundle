@@ -7,6 +7,8 @@ namespace Ecourty\McpServerBundle\Tests\Service;
 use Ecourty\McpServerBundle\Prompt\Argument;
 use Ecourty\McpServerBundle\Service\PromptRegistry;
 use Ecourty\McpServerBundle\TestApp\Prompt\GenerateGitCommitMessage;
+use Ecourty\McpServerBundle\TestApp\Prompt\ServerAPrompt;
+use Ecourty\McpServerBundle\TestApp\Prompt\ServerBPrompt;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -40,6 +42,14 @@ class PromptRegistryTest extends KernelTestCase
                 'name' => 'generate-git-commit-message',
                 'expectedClass' => GenerateGitCommitMessage::class,
             ],
+            [
+                'name' => 'server-a-prompt',
+                'expectedClass' => ServerAPrompt::class,
+            ],
+            [
+                'name' => 'server-b-prompt',
+                'expectedClass' => ServerBPrompt::class,
+            ],
         ];
     }
 
@@ -66,6 +76,99 @@ class PromptRegistryTest extends KernelTestCase
                     new Argument('scope', 'The scope of the changes, e.g., feature, bugfix, etc.', true),
                 ],
             ],
+            [
+                'name' => 'server-a-prompt',
+                'expectedDescription' => 'Prompt only available on server A',
+                'expectedArguments' => [
+                    new Argument('input', 'The input text', true, true),
+                ],
+            ],
+            [
+                'name' => 'server-b-prompt',
+                'expectedDescription' => 'Prompt only available on server B',
+                'expectedArguments' => [
+                    new Argument('input', 'The input text', true, true),
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @covers ::getPromptsDefinitions
+     */
+    public function testGetPromptsDefinitionsWithoutServerFilter(): void
+    {
+        $definitions = $this->registry->getPromptsDefinitions();
+
+        $this->assertCount(5, $definitions);
+
+        $promptNames = array_map(fn ($def) => $def->name, $definitions);
+        $this->assertContains('generate-git-commit-message', $promptNames);
+        $this->assertContains('greeting', $promptNames);
+        $this->assertContains('say_hello', $promptNames);
+        $this->assertContains('server-a-prompt', $promptNames);
+        $this->assertContains('server-b-prompt', $promptNames);
+    }
+
+    /**
+     * @covers ::getPromptsDefinitions
+     */
+    #[DataProvider('provideServerFilterData')]
+    public function testGetPromptsDefinitionsWithServerFilter(string $serverKey, array $expectedPromptNames): void
+    {
+        $definitions = $this->registry->getPromptsDefinitions($serverKey);
+
+        $this->assertCount(\count($expectedPromptNames), $definitions);
+
+        $actualPromptNames = array_map(fn ($def) => $def->name, $definitions);
+        sort($actualPromptNames);
+        sort($expectedPromptNames);
+
+        $this->assertSame($expectedPromptNames, $actualPromptNames);
+    }
+
+    public static function provideServerFilterData(): array
+    {
+        return [
+            'default server includes global prompts and default server prompts' => [
+                'serverKey' => 'default',
+                'expectedPromptNames' => ['generate-git-commit-message', 'greeting', 'say_hello'], // Global prompts (no serverKey specified)
+            ],
+            'server_a includes global prompts and server_a prompts' => [
+                'serverKey' => 'server_a',
+                'expectedPromptNames' => ['generate-git-commit-message', 'greeting', 'say_hello', 'server-a-prompt'],
+            ],
+            'server_b includes global prompts and server_b prompts' => [
+                'serverKey' => 'server_b',
+                'expectedPromptNames' => ['generate-git-commit-message', 'greeting', 'say_hello', 'server-b-prompt'],
+            ],
+            'non-existent server includes only global prompts' => [
+                'serverKey' => 'non_existent',
+                'expectedPromptNames' => ['generate-git-commit-message', 'greeting', 'say_hello'],
+            ],
+        ];
+    }
+
+    /**
+     * @covers ::getPromptServerKey
+     */
+    #[DataProvider('providePromptServerKeyData')]
+    public function testGetPromptServerKey(string $promptName, ?string $expectedServerKey): void
+    {
+        $serverKey = $this->registry->getPromptServerKey($promptName);
+
+        $this->assertSame($expectedServerKey, $serverKey);
+    }
+
+    public static function providePromptServerKeyData(): array
+    {
+        return [
+            'global prompt has no server key (generate-git-commit-message)' => ['generate-git-commit-message', null],
+            'global prompt has no server key (greeting)' => ['greeting', null],
+            'global prompt has no server key (say_hello)' => ['say_hello', null],
+            'server_a prompt has server_a key' => ['server-a-prompt', 'server_a'],
+            'server_b prompt has server_b key' => ['server-b-prompt', 'server_b'],
+            'non-existent prompt returns null' => ['non_existent_prompt', null],
         ];
     }
 }

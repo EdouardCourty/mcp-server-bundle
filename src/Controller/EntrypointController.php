@@ -9,6 +9,7 @@ use Ecourty\McpServerBundle\Exception\RequestHandlingException;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\Service\MethodHandlerRegistry;
 use Ecourty\McpServerBundle\Service\ResponseFactory;
+use Ecourty\McpServerBundle\Service\ServerConfigurationRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,6 +28,7 @@ class EntrypointController extends AbstractController
     public function __construct(
         private readonly MethodHandlerRegistry $methodHandlerRegistry,
         private readonly ResponseFactory $responseFactory,
+        private readonly ServerConfigurationRegistry $serverConfigurationRegistry,
     ) {
     }
 
@@ -34,8 +36,27 @@ class EntrypointController extends AbstractController
     public function __invoke(
         #[MapRequestPayload] JsonRpcRequest $jsonRpcRequest,
         Request $request,
+        ?string $serverKey = null,
     ): Response {
         $request->attributes->set('json_rpc_request_id', $jsonRpcRequest->id);
+
+        // Get server key from route defaults if not provided as parameter
+        if ($serverKey === null) {
+            $serverKey = $request->attributes->get('serverKey');
+            if (!\is_string($serverKey)) {
+                $serverKey = null;
+            }
+        }
+
+        // Validate server key if provided
+        if ($serverKey !== null) {
+            if (!$this->serverConfigurationRegistry->hasServer($serverKey)) {
+                throw new RequestHandlingException(new \InvalidArgumentException('Invalid server key: ' . $serverKey));
+            }
+
+            // Store the server key in request attributes for use by method handlers
+            $request->attributes->set('serverKey', $serverKey);
+        }
 
         $requestHandler = $this->methodHandlerRegistry->getMethodHandler($jsonRpcRequest->method);
 

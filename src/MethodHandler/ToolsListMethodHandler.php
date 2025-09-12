@@ -8,6 +8,7 @@ use Ecourty\McpServerBundle\Attribute\AsMethodHandler;
 use Ecourty\McpServerBundle\Contract\MethodHandlerInterface;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\Service\ToolRegistry;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Handles the 'tools/list' method in the MCP server.
@@ -22,13 +23,23 @@ class ToolsListMethodHandler implements MethodHandlerInterface
 {
     public function __construct(
         private readonly ToolRegistry $toolRegistry,
+        private readonly ?RequestStack $requestStack = null,
     ) {
     }
 
     public function handle(JsonRpcRequest $request): array
     {
+        // Try to get the server key from the current request
+        $serverKey = null;
+        if ($this->requestStack !== null) {
+            $currentRequest = $this->requestStack->getCurrentRequest();
+            if ($currentRequest !== null) {
+                $serverKey = $currentRequest->attributes->get('serverKey');
+            }
+        }
+
         return [
-            'tools' => $this->toolRegistry->getToolsDefinitions(),
+            'tools' => $this->toolRegistry->getToolsDefinitions($serverKey),
         ];
     }
 }

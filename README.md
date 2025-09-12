@@ -47,6 +47,7 @@ The current MCP protocol supported version is `2025-06-18`, which is the latest 
 - [JSON-RPC Methods](#json-rpc-methods)
   - [Built-in Methods](#built-in-methods)
   - [Custom Methods](#custom-methods)
+- [Multi-Server Setup](#multi-server-setup)
 - [Developer Experience](#developer-experience)
 - [Contributing](#contributing)
 - [License](#license)
@@ -712,6 +713,114 @@ The `#[AsMethodHandler]` attribute supports:
 
 - `method` (string, required): The JSON-RPC method name
 
+## Multi-Server Setup
+
+The MCP Server Bundle supports multiple server configurations, allowing you to organize tools, resources, and prompts across different logical servers. This is useful for separating concerns, creating different API endpoints, or organizing functionality by domain.
+
+### Configuration
+
+Configure multiple servers in `config/packages/mcp_server.yaml`:
+
+```yaml
+mcp_server:
+  # Default server configuration (backwards compatible)
+  server:
+    name: 'Main Server'
+    title: 'Main MCP Server'
+    version: '1.0.0'
+  
+  # Additional servers
+  servers:
+    api_server:
+      name: 'API Server'
+      title: 'External API Integration Server'
+      version: '1.0.0'
+    data_server:
+      name: 'Data Server'
+      title: 'Data Processing Server'
+      version: '1.0.0'
+```
+
+### Assigning Tools, Resources, and Prompts to Servers
+
+Use the `server` parameter in attributes to assign components to specific servers:
+
+```php
+#[AsTool(
+    name: 'process_data',
+    description: 'Processes large datasets',
+    server: 'data_server' // Assign to data_server
+)]
+class ProcessDataTool
+{
+    public function __invoke(ProcessDataSchema $schema): ToolResult
+    {
+        // Tool logic here
+    }
+}
+
+#[AsResource(
+    uri: 'api://external/{endpoint}',
+    name: 'External API Resource',
+    server: 'api_server' // Assign to api_server
+)]
+class ExternalApiResource
+{
+    public function __invoke(string $endpoint): ResourceResult
+    {
+        // Resource logic here
+    }
+}
+
+#[AsPrompt(
+    name: 'data-analysis-prompt',
+    description: 'Generates data analysis reports',
+    server: 'data_server' // Assign to data_server
+)]
+class DataAnalysisPrompt
+{
+    public function __invoke(ArgumentCollection $arguments): PromptResult
+    {
+        // Prompt logic here
+    }
+}
+```
+
+### Routing to Different Servers
+
+Configure different routes for each server in `config/routes/mcp.yaml`:
+
+```yaml
+# Default server route
+mcp_default:
+  path: /mcp
+  controller: mcp_server.entrypoint_controller
+  defaults:
+    serverKey: default
+
+# API server route
+mcp_api_server:
+  path: /mcp/api
+  controller: mcp_server.entrypoint_controller
+  defaults:
+    serverKey: api_server
+
+# Data server route
+mcp_data_server:
+  path: /vendorB/data
+  controller: mcp_server.entrypoint_controller
+  defaults:
+    serverKey: data_server
+```
+
+### Server Filtering
+
+- **Global components**: Tools, resources, and prompts without a `server` parameter are available on all servers
+- **Server-specific components**: Only available on their assigned server
+- **Default server**: Uses the `server` configuration and includes all global components
+
+This allows you to create modular, organized MCP servers while maintaining flexibility and backwards compatibility.
+
 ## Developer Experience
 
 The bundle provides several tools to help you during development:
@@ -784,7 +893,7 @@ composer install
 
 4. Fix the code style and run PHPStan
 ```bash
-composer fix-cs
+composer cs-fix
 composer phpstan
 ```
 
