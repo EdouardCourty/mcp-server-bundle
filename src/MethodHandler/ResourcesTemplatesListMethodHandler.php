@@ -9,8 +9,8 @@ use Ecourty\McpServerBundle\Contract\MethodHandlerInterface;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\Resource\AbstractResourceDefinition;
 use Ecourty\McpServerBundle\Resource\TemplateResourceDefinition;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\ResourceRegistry;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Handles the 'resources/templates/list' method in the MCP server.
@@ -26,20 +26,13 @@ class ResourcesTemplatesListMethodHandler implements MethodHandlerInterface
 {
     public function __construct(
         private readonly ResourceRegistry $resourceRegistry,
-        private readonly ?RequestStack $requestStack = null,
+        private readonly CurrentServerService $currentServerService,
     ) {
     }
 
     public function handle(JsonRpcRequest $request): array
     {
-        // Try to get the server key from the current request
-        $serverKey = null;
-        if ($this->requestStack !== null) {
-            $currentRequest = $this->requestStack->getCurrentRequest();
-            if ($currentRequest !== null) {
-                $serverKey = $currentRequest->attributes->get('serverKey');
-            }
-        }
+        $serverKey = $this->currentServerService->getCurrentServerKey();
 
         $resourceDefinitions = $this->resourceRegistry->getResourceDefinitions($serverKey);
         /** @var TemplateResourceDefinition[] $templateDefinitions */

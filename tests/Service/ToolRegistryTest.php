@@ -160,6 +160,28 @@ class ToolRegistryTest extends KernelTestCase
     }
 
     /**
+     * @covers ::getTool
+     */
+    public function testGetToolWithServerKey(): void
+    {
+        // Test getting a global tool with any server key - should work
+        $globalTool = $this->registry->getTool('sum_numbers', 'server_a');
+        $this->assertInstanceOf(SumNumbersTool::class, $globalTool);
+
+        // Test getting a server-specific tool with correct server key - should work
+        $serverATool = $this->registry->getTool('server_a_tool', 'server_a');
+        $this->assertInstanceOf(ServerATool::class, $serverATool);
+
+        // Test getting a server-specific tool with wrong server key - should return null
+        $wrongServerTool = $this->registry->getTool('server_a_tool', 'server_b');
+        $this->assertNull($wrongServerTool);
+
+        // Test getting a server-specific tool with no server key - should work (backwards compatibility)
+        $noServerTool = $this->registry->getTool('server_a_tool');
+        $this->assertInstanceOf(ServerATool::class, $noServerTool);
+    }
+
+    /**
      * @covers ::getToolServerKey
      */
     #[DataProvider('provideToolServerKeyData')]

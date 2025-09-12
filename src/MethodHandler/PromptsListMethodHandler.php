@@ -7,8 +7,8 @@ namespace Ecourty\McpServerBundle\MethodHandler;
 use Ecourty\McpServerBundle\Attribute\AsMethodHandler;
 use Ecourty\McpServerBundle\Contract\MethodHandlerInterface;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\PromptRegistry;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Handles the 'prompts/list' method in the MCP server.
@@ -22,20 +22,13 @@ class PromptsListMethodHandler implements MethodHandlerInterface
 {
     public function __construct(
         private readonly PromptRegistry $toolRegistry,
-        private readonly ?RequestStack $requestStack = null,
+        private readonly CurrentServerService $currentServerService,
     ) {
     }
 
     public function handle(JsonRpcRequest $request): array
     {
-        // Try to get the server key from the current request
-        $serverKey = null;
-        if ($this->requestStack !== null) {
-            $currentRequest = $this->requestStack->getCurrentRequest();
-            if ($currentRequest !== null) {
-                $serverKey = $currentRequest->attributes->get('serverKey');
-            }
-        }
+        $serverKey = $this->currentServerService->getCurrentServerKey();
 
         return [
             'prompts' => $this->toolRegistry->getPromptsDefinitions($serverKey),

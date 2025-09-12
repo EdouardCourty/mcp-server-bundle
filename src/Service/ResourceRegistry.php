@@ -32,10 +32,20 @@ class ResourceRegistry
     ) {
     }
 
-    public function getResource(string $uri): ?object
+    public function getResource(string $uri, ?string $serverKey = null): ?object
     {
         if ($this->resourceLocator->has($uri) === false) {
             return null;
+        }
+
+        // If server key is provided, validate that the resource belongs to this server
+        if ($serverKey !== null) {
+            $resourceServerKey = $this->resourceToServerMapping[$uri] ?? null;
+
+            // Allow access to resources with no server key (global resources) or resources that belong to the current server
+            if ($resourceServerKey !== null && $resourceServerKey !== $serverKey) {
+                return null;
+            }
         }
 
         return $this->resourceLocator->get($uri);

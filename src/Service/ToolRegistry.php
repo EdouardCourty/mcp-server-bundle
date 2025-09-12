@@ -30,10 +30,20 @@ class ToolRegistry
     ) {
     }
 
-    public function getTool(string $name): ?object
+    public function getTool(string $name, ?string $serverKey = null): ?object
     {
         if ($this->toolLocator->has($name) === false) {
             return null;
+        }
+
+        // If server key is provided, validate that the tool belongs to this server
+        if ($serverKey !== null) {
+            $toolServerKey = $this->toolToServerMapping[$name] ?? null;
+
+            // Allow access to tools with no server key (global tools) or tools that belong to the current server
+            if ($toolServerKey !== null && $toolServerKey !== $serverKey) {
+                return null;
+            }
         }
 
         return $this->toolLocator->get($name);

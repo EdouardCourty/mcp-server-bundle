@@ -150,6 +150,28 @@ class PromptRegistryTest extends KernelTestCase
     }
 
     /**
+     * @covers ::getPrompt
+     */
+    public function testGetPromptWithServerKey(): void
+    {
+        // Test getting a global prompt with any server key - should work
+        $globalPrompt = $this->registry->getPrompt('generate-git-commit-message', 'server_a');
+        $this->assertInstanceOf(GenerateGitCommitMessage::class, $globalPrompt);
+
+        // Test getting a server-specific prompt with correct server key - should work
+        $serverAPrompt = $this->registry->getPrompt('server-a-prompt', 'server_a');
+        $this->assertInstanceOf(ServerAPrompt::class, $serverAPrompt);
+
+        // Test getting a server-specific prompt with wrong server key - should return null
+        $wrongServerPrompt = $this->registry->getPrompt('server-a-prompt', 'server_b');
+        $this->assertNull($wrongServerPrompt);
+
+        // Test getting a server-specific prompt with no server key - should work (backwards compatibility)
+        $noServerPrompt = $this->registry->getPrompt('server-a-prompt');
+        $this->assertInstanceOf(ServerAPrompt::class, $noServerPrompt);
+    }
+
+    /**
      * @covers ::getPromptServerKey
      */
     #[DataProvider('providePromptServerKeyData')]

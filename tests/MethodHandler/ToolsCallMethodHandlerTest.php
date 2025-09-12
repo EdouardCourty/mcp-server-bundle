@@ -9,6 +9,7 @@ use Ecourty\McpServerBundle\Event\ToolCallEvent;
 use Ecourty\McpServerBundle\Event\ToolResultEvent;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\MethodHandler\ToolsCallMethodHandler;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\InputSanitizer;
 use Ecourty\McpServerBundle\Service\ToolRegistry;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -39,12 +40,15 @@ class ToolsCallMethodHandlerTest extends KernelTestCase
         $validator = self::getContainer()->get(ValidatorInterface::class);
         /** @var InputSanitizer $inputSanitizer */
         $inputSanitizer = self::getContainer()->get(InputSanitizer::class);
+        /** @var CurrentServerService $currentServerService */
+        $currentServerService = self::getContainer()->get(CurrentServerService::class);
 
         $this->toolsCallMethodHandler = new ToolsCallMethodHandler(
             toolRegistry: $toolRegistry,
             serializer: $serializer,
             validator: $validator,
             inputSanitizer: $inputSanitizer,
+            currentServerService: $currentServerService,
             eventDispatcher: $this->eventDispatcher,
         );
     }

@@ -9,9 +9,9 @@ use Ecourty\McpServerBundle\Contract\MethodHandlerInterface;
 use Ecourty\McpServerBundle\DependencyInjection\Configuration;
 use Ecourty\McpServerBundle\Event\InitializeEvent;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\ServerConfigurationRegistry;
 use Psr\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Handles the 'initialize' method for the MCP server.
@@ -30,7 +30,7 @@ class InitializeMethodHandler implements MethodHandlerInterface
         private readonly ?string $serverVersion = null,
         private readonly ?ServerConfigurationRegistry $serverConfigurationRegistry = null,
         private readonly ?EventDispatcherInterface $eventDispatcher = null,
-        private readonly ?RequestStack $requestStack = null,
+        private readonly ?CurrentServerService $currentServerService = null,
     ) {
     }
 
@@ -121,18 +121,12 @@ class InitializeMethodHandler implements MethodHandlerInterface
      */
     private function determineServerFromRequest(): ?array
     {
-        if ($this->requestStack === null || $this->serverConfigurationRegistry === null) {
+        if ($this->currentServerService === null || $this->serverConfigurationRegistry === null) {
             return null;
         }
 
-        $currentRequest = $this->requestStack->getCurrentRequest();
-        if ($currentRequest === null) {
-            return null;
-        }
-
-        // Get the serverKey from request attributes (set by the controller)
-        $serverKey = $currentRequest->attributes->get('serverKey');
-        if (!\is_string($serverKey)) {
+        $serverKey = $this->currentServerService->getCurrentServerKey();
+        if ($serverKey === null) {
             return null;
         }
 

@@ -31,10 +31,20 @@ class PromptRegistry
     ) {
     }
 
-    public function getPrompt(string $name): ?object
+    public function getPrompt(string $name, ?string $serverKey = null): ?object
     {
         if ($this->promptLocator->has($name) === false) {
             return null;
+        }
+
+        // If server key is provided, validate that the prompt belongs to this server
+        if ($serverKey !== null) {
+            $promptServerKey = $this->promptToServerMapping[$name] ?? null;
+
+            // Allow access to prompts with no server key (global prompts) or prompts that belong to the current server
+            if ($promptServerKey !== null && $promptServerKey !== $serverKey) {
+                return null;
+            }
         }
 
         return $this->promptLocator->get($name);

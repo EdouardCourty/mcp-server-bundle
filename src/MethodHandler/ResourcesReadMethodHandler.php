@@ -9,6 +9,7 @@ use Ecourty\McpServerBundle\Contract\MethodHandlerInterface;
 use Ecourty\McpServerBundle\Event\Resource\ResourceReadEvent;
 use Ecourty\McpServerBundle\Event\Resource\ResourceReadResultEvent;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\ResourceExecutor;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -26,6 +27,7 @@ class ResourcesReadMethodHandler implements MethodHandlerInterface
 {
     public function __construct(
         private readonly ResourceExecutor $resourceExecutor,
+        private readonly CurrentServerService $currentServerService,
         private readonly ?EventDispatcherInterface $eventDispatcher = null,
     ) {
     }
@@ -40,7 +42,8 @@ class ResourcesReadMethodHandler implements MethodHandlerInterface
 
         $this->eventDispatcher?->dispatch(new ResourceReadEvent($uri));
 
-        $result = $this->resourceExecutor->execute($uri);
+        $serverKey = $this->currentServerService->getCurrentServerKey();
+        $result = $this->resourceExecutor->execute($uri, $serverKey);
 
         $this->eventDispatcher?->dispatch(new ResourceReadResultEvent($uri, $result));
 
