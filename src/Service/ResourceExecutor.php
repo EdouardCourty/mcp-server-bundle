@@ -18,10 +18,10 @@ class ResourceExecutor
     ) {
     }
 
-    public function execute(string $uri): ResourceResult
+    public function execute(string $uri, ?string $serverKey = null): ResourceResult
     {
-        $definition = $this->findDefinition($uri);
-        $resource = $this->getResourceInstance($definition->uri);
+        $definition = $this->findDefinition($uri, $serverKey);
+        $resource = $this->getResourceInstance($definition->uri, $serverKey);
         $invokeMethod = $this->getInvokeMethod($resource, $definition->uri);
 
         $rawArgs = $this->matcher->match($definition->uri, $uri);
@@ -40,9 +40,9 @@ class ResourceExecutor
         return $result;
     }
 
-    private function findDefinition(string $uri): AbstractResourceDefinition
+    private function findDefinition(string $uri, ?string $serverKey = null): AbstractResourceDefinition
     {
-        $resourceDefinitions = $this->registry->getResourceDefinitions();
+        $resourceDefinitions = $this->registry->getResourceDefinitions($serverKey);
 
         foreach ($resourceDefinitions as $resourceDefinition) {
             $matchResult = $this->matcher->match($resourceDefinition->uri, $uri);
@@ -55,18 +55,18 @@ class ResourceExecutor
         }
 
         throw new \InvalidArgumentException(\sprintf(
-            'No resource matched URI "%s".',
+            'No resource matched URI "%s" or resource not available in current server context.',
             $uri,
         ));
     }
 
-    private function getResourceInstance(string $resourceUri): object
+    private function getResourceInstance(string $resourceUri, ?string $serverKey = null): object
     {
-        $resource = $this->registry->getResource($resourceUri);
+        $resource = $this->registry->getResource($resourceUri, $serverKey);
 
         if ($resource === null) {
             throw new \RuntimeException(\sprintf(
-                'Resource "%s" not found.',
+                'Resource "%s" not found or not available in current server context.',
                 $resourceUri,
             ));
         }

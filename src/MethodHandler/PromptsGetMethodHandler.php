@@ -14,6 +14,7 @@ use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\IO\Prompt\PromptResult;
 use Ecourty\McpServerBundle\Prompt\ArgumentCollection;
 use Ecourty\McpServerBundle\Prompt\PromptDefinition;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\InputSanitizer;
 use Ecourty\McpServerBundle\Service\PromptRegistry;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -32,6 +33,7 @@ class PromptsGetMethodHandler implements MethodHandlerInterface
     public function __construct(
         private readonly PromptRegistry $promptRegistry,
         private readonly InputSanitizer $inputSanitizer,
+        private readonly CurrentServerService $currentServerService,
         private readonly ?EventDispatcherInterface $eventDispatcher = null,
     ) {
     }
@@ -44,11 +46,12 @@ class PromptsGetMethodHandler implements MethodHandlerInterface
             throw new \InvalidArgumentException('Prompt name is required.');
         }
 
-        $prompt = $this->promptRegistry->getPrompt($promptName);
+        $serverKey = $this->currentServerService->getCurrentServerKey();
+        $prompt = $this->promptRegistry->getPrompt($promptName, $serverKey);
         $promptDefinition = $this->promptRegistry->getPromptDefinition($promptName);
 
         if ($prompt === null) {
-            throw new \InvalidArgumentException(\sprintf('Prompt "%s" not found.', $promptName));
+            throw new \InvalidArgumentException(\sprintf('Prompt "%s" not found or not available in current server context.', $promptName));
         }
 
         if ($promptDefinition === null) {

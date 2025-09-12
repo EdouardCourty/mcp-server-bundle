@@ -11,6 +11,7 @@ use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\IO\Resource\BinaryResource;
 use Ecourty\McpServerBundle\IO\Resource\ResourceResult;
 use Ecourty\McpServerBundle\MethodHandler\ResourcesReadMethodHandler;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\ResourceExecutor;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -22,6 +23,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 class ResourcesReadMethodHandlerTest extends TestCase
 {
     private MockObject&ResourceExecutor $resourceExecutor;
+    private MockObject&CurrentServerService $currentServerService;
     private MockObject&EventDispatcherInterface $eventDispatcher;
 
     private ResourcesReadMethodHandler $handler;
@@ -29,10 +31,12 @@ class ResourcesReadMethodHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->resourceExecutor = $this->createMock(ResourceExecutor::class);
+        $this->currentServerService = $this->createMock(CurrentServerService::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
         $this->handler = new ResourcesReadMethodHandler(
             resourceExecutor: $this->resourceExecutor,
+            currentServerService: $this->currentServerService,
             eventDispatcher: $this->eventDispatcher,
         );
     }
@@ -61,9 +65,17 @@ class ResourcesReadMethodHandlerTest extends TestCase
                 blob: 'blob_data',
             ),
         ]);
+
+        $serverKey = 'test_server';
+        $this->currentServerService
+            ->expects($this->once())
+            ->method('getCurrentServerKey')
+            ->willReturn($serverKey);
+
         $this->resourceExecutor
             ->expects($this->once())
             ->method('execute')
+            ->with('file://random', $serverKey)
             ->willReturn($resourceResult);
 
         $uri = 'file://random';

@@ -61,12 +61,16 @@ class DebugResourceCommand extends Command
             return self::FAILURE;
         }
 
+        $serverKey = $this->resourceRegistry->getResourceServerKey($resourceDefinition->uri);
+        $serverInfo = $serverKey ?? 'Global';
+
         $io->table(
-            ['Name', 'URI', 'Title', 'Description', 'MimeType', 'Size'],
+            ['Name', 'URI', 'Server', 'Title', 'Description', 'MimeType', 'Size'],
             [
                 [
                     $resourceDefinition->name,
                     $resourceDefinition->uri,
+                    $serverInfo,
                     $resourceDefinition->title,
                     $resourceDefinition->description,
                     $resourceDefinition->mimeType,
@@ -91,11 +95,15 @@ class DebugResourceCommand extends Command
         }
 
         $io->table(
-            ['Name', 'URI', 'Title', 'Description', 'MimeType', 'Size'],
-            array_map(static function (AbstractResourceDefinition $resourceDefinition) {
+            ['Name', 'URI', 'Server', 'Title', 'Description', 'MimeType', 'Size'],
+            array_map(function (AbstractResourceDefinition $resourceDefinition) {
+                $serverKey = $this->resourceRegistry->getResourceServerKey($resourceDefinition->uri);
+                $serverInfo = $serverKey ?? 'Global';
+
                 return [
                     $resourceDefinition->name,
                     $resourceDefinition->uri,
+                    $serverInfo,
                     $resourceDefinition->title,
                     $resourceDefinition->description,
                     $resourceDefinition->mimeType,

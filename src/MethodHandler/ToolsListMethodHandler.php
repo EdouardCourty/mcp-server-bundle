@@ -7,6 +7,7 @@ namespace Ecourty\McpServerBundle\MethodHandler;
 use Ecourty\McpServerBundle\Attribute\AsMethodHandler;
 use Ecourty\McpServerBundle\Contract\MethodHandlerInterface;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\ToolRegistry;
 
 /**
@@ -22,13 +23,16 @@ class ToolsListMethodHandler implements MethodHandlerInterface
 {
     public function __construct(
         private readonly ToolRegistry $toolRegistry,
+        private readonly CurrentServerService $currentServerService,
     ) {
     }
 
     public function handle(JsonRpcRequest $request): array
     {
+        $serverKey = $this->currentServerService->getCurrentServerKey();
+
         return [
-            'tools' => $this->toolRegistry->getToolsDefinitions(),
+            'tools' => $this->toolRegistry->getToolsDefinitions($serverKey),
         ];
     }
 }

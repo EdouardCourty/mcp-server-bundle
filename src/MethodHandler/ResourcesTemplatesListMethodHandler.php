@@ -9,6 +9,7 @@ use Ecourty\McpServerBundle\Contract\MethodHandlerInterface;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\Resource\AbstractResourceDefinition;
 use Ecourty\McpServerBundle\Resource\TemplateResourceDefinition;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\ResourceRegistry;
 
 /**
@@ -25,12 +26,15 @@ class ResourcesTemplatesListMethodHandler implements MethodHandlerInterface
 {
     public function __construct(
         private readonly ResourceRegistry $resourceRegistry,
+        private readonly CurrentServerService $currentServerService,
     ) {
     }
 
     public function handle(JsonRpcRequest $request): array
     {
-        $resourceDefinitions = $this->resourceRegistry->getResourceDefinitions();
+        $serverKey = $this->currentServerService->getCurrentServerKey();
+
+        $resourceDefinitions = $this->resourceRegistry->getResourceDefinitions($serverKey);
         /** @var TemplateResourceDefinition[] $templateDefinitions */
         $templateDefinitions = array_filter($resourceDefinitions, function (AbstractResourceDefinition $definition) {
             return $definition instanceof TemplateResourceDefinition;

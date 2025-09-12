@@ -61,12 +61,16 @@ class DebugMcpToolsCommand extends Command
             return self::FAILURE;
         }
 
+        $serverKey = $this->toolRegistry->getToolServerKey($toolName);
+        $serverInfo = $serverKey ?? 'Global';
+
         $io->table(
-            ['Name', 'Description', 'Input Schema', 'Title', 'ReadOnly', 'Destructive', 'Idempotent', 'OpenWorld'],
+            ['Name', 'Description', 'Server', 'Input Schema', 'Title', 'ReadOnly', 'Destructive', 'Idempotent', 'OpenWorld'],
             [
                 [
                     $tool->name,
                     $tool->description,
+                    $serverInfo,
                     $tool->inputSchemaClass,
                     $tool->annotations['title'],
                     $tool->annotations['readOnlyHint'] ? 'Yes' : 'No',
@@ -93,11 +97,15 @@ class DebugMcpToolsCommand extends Command
         }
 
         $io->table(
-            ['Name', 'Description', 'Input Schema'],
-            array_map(static function (ToolDefinition $tool) {
+            ['Name', 'Description', 'Server', 'Input Schema'],
+            array_map(function (ToolDefinition $tool) {
+                $serverKey = $this->toolRegistry->getToolServerKey($tool->name);
+                $serverInfo = $serverKey ?? 'Global';
+
                 return [
                     $tool->name,
                     $tool->description,
+                    $serverInfo,
                     $tool->inputSchemaClass,
                 ];
             }, $tools),

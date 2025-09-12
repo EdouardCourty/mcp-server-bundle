@@ -23,6 +23,12 @@ class ToolPass implements CompilerPassInterface
         $schemaExtractor = new SchemaExtractor();
         $toolRegistry = $container->getDefinition(ToolRegistry::class);
 
+        // Get configured server keys for validation
+        $configuredServers = $container->getParameter('mcp_server.configured_servers');
+        if (!\is_array($configuredServers)) {
+            $configuredServers = [];
+        }
+
         foreach ($container->getDefinitions() as $definition) {
             $class = $definition->getClass();
 
@@ -100,6 +106,16 @@ class ToolPass implements CompilerPassInterface
                 ? []
                 : $schemaExtractor->extract($inputSchemaClassName);
 
+            // Validate server key at compile time
+            if ($asTool->server !== null && !\in_array($asTool->server, $configuredServers, true)) {
+                throw new \LogicException(\sprintf(
+                    'Tool "%s" references server "%s" which is not configured. Available servers: %s',
+                    $asTool->name,
+                    $asTool->server,
+                    implode(', ', $configuredServers),
+                ));
+            }
+
             $definition->addTag(name: 'mcp_server.tool', attributes: [
                 'name' => $asTool->name,
             ]);
@@ -110,6 +126,7 @@ class ToolPass implements CompilerPassInterface
                 $inputSchema,
                 $inputSchemaClassName,
                 $asTool->getToolAnnotations()->asArray(),
+                $asTool->server,
             ]);
         }
     }
