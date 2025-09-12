@@ -7,7 +7,6 @@ namespace Ecourty\McpServerBundle\Command;
 use Ecourty\McpServerBundle\Prompt\Argument;
 use Ecourty\McpServerBundle\Prompt\PromptDefinition;
 use Ecourty\McpServerBundle\Service\PromptRegistry;
-use Ecourty\McpServerBundle\Service\ServerConfigurationRegistry;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -29,7 +28,6 @@ class DebugMcpPromptsCommand extends Command
 {
     public function __construct(
         private readonly PromptRegistry $promptRegistry,
-        private readonly ServerConfigurationRegistry $serverConfigurationRegistry,
     ) {
         parent::__construct();
     }
@@ -64,7 +62,7 @@ class DebugMcpPromptsCommand extends Command
         }
 
         $serverKey = $this->promptRegistry->getPromptServerKey($promptName);
-        $serverInfo = $serverKey ? $this->getServerDisplayName($serverKey) : 'Global (All servers)';
+        $serverInfo = $serverKey ?? 'Global';
 
         $io->table(
             ['Name', 'Description', 'Server', 'Arguments'],
@@ -97,7 +95,7 @@ class DebugMcpPromptsCommand extends Command
             ['Name', 'Description', 'Server', 'Arguments'],
             array_map(function (PromptDefinition $prompt) {
                 $serverKey = $this->promptRegistry->getPromptServerKey($prompt->name);
-                $serverInfo = $serverKey ? $this->getServerDisplayName($serverKey) : 'Global (All servers)';
+                $serverInfo = $serverKey ?? 'Global';
 
                 return [
                     $prompt->name,
@@ -109,15 +107,5 @@ class DebugMcpPromptsCommand extends Command
         );
 
         return self::SUCCESS;
-    }
-
-    private function getServerDisplayName(string $serverKey): string
-    {
-        $serverConfig = $this->serverConfigurationRegistry->getServerConfiguration($serverKey);
-        if ($serverConfig === null) {
-            return $serverKey . ' (Not found)';
-        }
-
-        return \sprintf('%s (%s)', $serverConfig['name'], $serverKey);
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Ecourty\McpServerBundle\Command;
 
-use Ecourty\McpServerBundle\Service\ServerConfigurationRegistry;
 use Ecourty\McpServerBundle\Service\ToolRegistry;
 use Ecourty\McpServerBundle\Tool\ToolDefinition;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -29,7 +28,6 @@ class DebugMcpToolsCommand extends Command
 {
     public function __construct(
         private readonly ToolRegistry $toolRegistry,
-        private readonly ServerConfigurationRegistry $serverConfigurationRegistry,
     ) {
         parent::__construct();
     }
@@ -64,7 +62,7 @@ class DebugMcpToolsCommand extends Command
         }
 
         $serverKey = $this->toolRegistry->getToolServerKey($toolName);
-        $serverInfo = $serverKey ? $this->getServerDisplayName($serverKey) : 'Global (All servers)';
+        $serverInfo = $serverKey ?? 'Global';
 
         $io->table(
             ['Name', 'Description', 'Server', 'Input Schema', 'Title', 'ReadOnly', 'Destructive', 'Idempotent', 'OpenWorld'],
@@ -102,7 +100,7 @@ class DebugMcpToolsCommand extends Command
             ['Name', 'Description', 'Server', 'Input Schema'],
             array_map(function (ToolDefinition $tool) {
                 $serverKey = $this->toolRegistry->getToolServerKey($tool->name);
-                $serverInfo = $serverKey ? $this->getServerDisplayName($serverKey) : 'Global (All servers)';
+                $serverInfo = $serverKey ?? 'Global';
 
                 return [
                     $tool->name,
@@ -114,15 +112,5 @@ class DebugMcpToolsCommand extends Command
         );
 
         return self::SUCCESS;
-    }
-
-    private function getServerDisplayName(string $serverKey): string
-    {
-        $serverConfig = $this->serverConfigurationRegistry->getServerConfiguration($serverKey);
-        if ($serverConfig === null) {
-            return $serverKey . ' (Not found)';
-        }
-
-        return \sprintf('%s (%s)', $serverConfig['name'], $serverKey);
     }
 }

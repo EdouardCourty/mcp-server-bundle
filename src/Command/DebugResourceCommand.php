@@ -6,7 +6,6 @@ namespace Ecourty\McpServerBundle\Command;
 
 use Ecourty\McpServerBundle\Resource\AbstractResourceDefinition;
 use Ecourty\McpServerBundle\Service\ResourceRegistry;
-use Ecourty\McpServerBundle\Service\ServerConfigurationRegistry;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -29,7 +28,6 @@ class DebugResourceCommand extends Command
 {
     public function __construct(
         private readonly ResourceRegistry $resourceRegistry,
-        private readonly ServerConfigurationRegistry $serverConfigurationRegistry,
     ) {
         parent::__construct();
     }
@@ -64,7 +62,7 @@ class DebugResourceCommand extends Command
         }
 
         $serverKey = $this->resourceRegistry->getResourceServerKey($resourceDefinition->uri);
-        $serverInfo = $serverKey ? $this->getServerDisplayName($serverKey) : 'Global (All servers)';
+        $serverInfo = $serverKey ?? 'Global';
 
         $io->table(
             ['Name', 'URI', 'Server', 'Title', 'Description', 'MimeType', 'Size'],
@@ -100,7 +98,7 @@ class DebugResourceCommand extends Command
             ['Name', 'URI', 'Server', 'Title', 'Description', 'MimeType', 'Size'],
             array_map(function (AbstractResourceDefinition $resourceDefinition) {
                 $serverKey = $this->resourceRegistry->getResourceServerKey($resourceDefinition->uri);
-                $serverInfo = $serverKey ? $this->getServerDisplayName($serverKey) : 'Global (All servers)';
+                $serverInfo = $serverKey ?? 'Global';
 
                 return [
                     $resourceDefinition->name,
@@ -115,15 +113,5 @@ class DebugResourceCommand extends Command
         );
 
         return self::SUCCESS;
-    }
-
-    private function getServerDisplayName(string $serverKey): string
-    {
-        $serverConfig = $this->serverConfigurationRegistry->getServerConfiguration($serverKey);
-        if ($serverConfig === null) {
-            return $serverKey . ' (Not found)';
-        }
-
-        return \sprintf('%s (%s)', $serverConfig['name'], $serverKey);
     }
 }
