@@ -1,4 +1,9 @@
-# MCP Server Bundle
+# MCP Server Bundle (Deprecated)
+
+> [!CAUTION]
+> This bundle is deprecated and will no longer receive updates.  
+> Please consider using alternative solutions for MCP server implementations.  
+> I encourage the use of [Symfony AI](https://github.com/symfony/ai) instead.
 
 [![PHP CI](https://github.com/EdouardCourty/mcp-server-bundle/actions/workflows/php_ci.yml/badge.svg)](https://github.com/EdouardCourty/mcp-server-bundle/actions/workflows/php_ci.yml)
 
