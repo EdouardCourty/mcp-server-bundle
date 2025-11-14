@@ -3,3 +3,12 @@ mcp_server:
     name: My Test MCP Server
     title: My Test MCP Server Title
     version: 1.0.1
+  servers:
+    server_a:
+      name: Server A
+      title: Server A Title
+      version: 1.0.0
+    server_b:
+      name: Server B
+      title: Server B Title
+      version: 1.0.0

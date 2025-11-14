@@ -14,6 +14,7 @@ class AsResource
         public readonly ?string $description = null, // Optional description
         public readonly ?string $mimeType = null, // Optional MIME type of the resource
         public readonly ?string $size = null, // Optional size of the resource, in bytes
+        public readonly ?string $server = null, // Optional server key to specify which server this resource belongs to (if multiple servers are configured)
     ) {
     }
 

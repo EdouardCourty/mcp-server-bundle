@@ -11,6 +11,7 @@ use Ecourty\McpServerBundle\Event\Prompt\PromptResultEvent;
 use Ecourty\McpServerBundle\Exception\PromptGetException;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\MethodHandler\PromptsGetMethodHandler;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\InputSanitizer;
 use Ecourty\McpServerBundle\Service\PromptRegistry;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -35,10 +36,13 @@ class PromptsGetMethodHandlerTest extends KernelTestCase
         $promptRegistry = self::getContainer()->get(PromptRegistry::class);
         /** @var InputSanitizer $inputSanitizer */
         $inputSanitizer = self::getContainer()->get(InputSanitizer::class);
+        /** @var CurrentServerService $currentServerService */
+        $currentServerService = self::getContainer()->get(CurrentServerService::class);
 
         $this->promptsGetMethodHandler = new PromptsGetMethodHandler(
             promptRegistry: $promptRegistry,
             inputSanitizer: $inputSanitizer,
+            currentServerService: $currentServerService,
             eventDispatcher: $this->eventDispatcher,
         );
     }

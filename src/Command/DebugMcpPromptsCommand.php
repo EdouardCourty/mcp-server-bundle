@@ -61,12 +61,16 @@ class DebugMcpPromptsCommand extends Command
             return self::FAILURE;
         }
 
+        $serverKey = $this->promptRegistry->getPromptServerKey($promptName);
+        $serverInfo = $serverKey ?? 'Global';
+
         $io->table(
-            ['Name', 'Description', 'Arguments'],
+            ['Name', 'Description', 'Server', 'Arguments'],
             [
                 [
                     $prompt->name,
                     $prompt->description,
+                    $serverInfo,
                     implode(', ', array_map(fn (Argument $argument) => $argument->name, $prompt->arguments ?? [])),
                 ],
             ],
@@ -88,11 +92,15 @@ class DebugMcpPromptsCommand extends Command
         }
 
         $io->table(
-            ['Name', 'Description', 'Arguments'],
-            array_map(static function (PromptDefinition $prompt) {
+            ['Name', 'Description', 'Server', 'Arguments'],
+            array_map(function (PromptDefinition $prompt) {
+                $serverKey = $this->promptRegistry->getPromptServerKey($prompt->name);
+                $serverInfo = $serverKey ?? 'Global';
+
                 return [
                     $prompt->name,
                     $prompt->description,
+                    $serverInfo,
                     implode(', ', array_map(fn (Argument $argument) => $argument->name, $prompt->arguments ?? [])),
                 ];
             }, $promptsDefinitions),

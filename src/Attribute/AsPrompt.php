@@ -18,11 +18,13 @@ class AsPrompt
      * @param string                $name        the name of the prompt
      * @param string|null           $description a description of the prompt
      * @param array<Argument|mixed> $arguments   an array of argument definitions for the prompt
+     * @param string|null           $server      optional server key to specify which server this prompt belongs to (if multiple servers are configured)
      */
     public function __construct(
         public readonly string $name,
         public readonly ?string $description = null,
         array $arguments = [],
+        public readonly ?string $server = null,
     ) {
         foreach ($arguments as $argument) {
             if ($argument instanceof Argument === false) {

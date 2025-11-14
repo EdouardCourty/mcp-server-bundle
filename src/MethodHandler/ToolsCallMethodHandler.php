@@ -12,6 +12,7 @@ use Ecourty\McpServerBundle\Event\ToolResultEvent;
 use Ecourty\McpServerBundle\Exception\ToolCallException;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\IO\ToolResult;
+use Ecourty\McpServerBundle\Service\CurrentServerService;
 use Ecourty\McpServerBundle\Service\InputSanitizer;
 use Ecourty\McpServerBundle\Service\ToolRegistry;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -37,6 +38,7 @@ class ToolsCallMethodHandler implements MethodHandlerInterface
         private readonly SerializerInterface $serializer,
         private readonly ValidatorInterface $validator,
         private readonly InputSanitizer $inputSanitizer,
+        private readonly CurrentServerService $currentServerService,
         private readonly ?EventDispatcherInterface $eventDispatcher = null,
     ) {
     }
@@ -49,11 +51,12 @@ class ToolsCallMethodHandler implements MethodHandlerInterface
             throw new \InvalidArgumentException('Tool name is required.');
         }
 
-        $tool = $this->toolRegistry->getTool($toolName);
+        $serverKey = $this->currentServerService->getCurrentServerKey();
+        $tool = $this->toolRegistry->getTool($toolName, $serverKey);
         $toolDefinition = $this->toolRegistry->getToolDefinition($toolName);
 
         if ($tool === null) {
-            throw new \InvalidArgumentException(\sprintf('Tool "%s" not found.', $request->params['name']));
+            throw new \InvalidArgumentException(\sprintf('Tool "%s" not found or not available in current server context.', $toolName));
         }
 
         if ($toolDefinition === null) {

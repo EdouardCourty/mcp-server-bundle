@@ -7,6 +7,8 @@ namespace Ecourty\McpServerBundle\Tests\Service;
 use Ecourty\McpServerBundle\Service\ToolRegistry;
 use Ecourty\McpServerBundle\TestApp\Tool\CreateUserTool;
 use Ecourty\McpServerBundle\TestApp\Tool\MultiplyNumbersTool;
+use Ecourty\McpServerBundle\TestApp\Tool\ServerATool;
+use Ecourty\McpServerBundle\TestApp\Tool\ServerBTool;
 use Ecourty\McpServerBundle\TestApp\Tool\SumNumbersTool;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -45,6 +47,8 @@ class ToolRegistryTest extends KernelTestCase
             ['sum_numbers', SumNumbersTool::class],
             ['multiply_numbers', MultiplyNumbersTool::class],
             ['create_user', CreateUserTool::class],
+            ['server_a_tool', ServerATool::class],
+            ['server_b_tool', ServerBTool::class],
         ];
     }
 
@@ -95,6 +99,109 @@ class ToolRegistryTest extends KernelTestCase
                     'required' => ['emailAddress', 'username'],
                 ],
             ],
+        ];
+    }
+
+    /**
+     * @covers ::getToolsDefinitions
+     */
+    public function testGetToolsDefinitionsWithoutServerFilter(): void
+    {
+        $definitions = $this->registry->getToolsDefinitions();
+
+        $this->assertCount(6, $definitions);
+
+        $toolNames = array_map(fn ($def) => $def->name, $definitions);
+        $this->assertContains('sum_numbers', $toolNames);
+        $this->assertContains('multiply_numbers', $toolNames);
+        $this->assertContains('create_user', $toolNames);
+        $this->assertContains('date_time', $toolNames);
+        $this->assertContains('server_a_tool', $toolNames);
+        $this->assertContains('server_b_tool', $toolNames);
+    }
+
+    /**
+     * @covers ::getToolsDefinitions
+     */
+    #[DataProvider('provideServerFilterData')]
+    public function testGetToolsDefinitionsWithServerFilter(string $serverKey, array $expectedToolNames): void
+    {
+        $definitions = $this->registry->getToolsDefinitions($serverKey);
+
+        $this->assertCount(\count($expectedToolNames), $definitions);
+
+        $actualToolNames = array_map(fn ($def) => $def->name, $definitions);
+        sort($actualToolNames);
+        sort($expectedToolNames);
+
+        $this->assertSame($expectedToolNames, $actualToolNames);
+    }
+
+    public static function provideServerFilterData(): array
+    {
+        return [
+            'default server includes global tools and default server tools' => [
+                'serverKey' => 'default',
+                'expectedToolNames' => ['sum_numbers', 'multiply_numbers', 'create_user', 'date_time'], // Global tools (no serverKey specified)
+            ],
+            'server_a includes global tools and server_a tools' => [
+                'serverKey' => 'server_a',
+                'expectedToolNames' => ['sum_numbers', 'multiply_numbers', 'create_user', 'date_time', 'server_a_tool'],
+            ],
+            'server_b includes global tools and server_b tools' => [
+                'serverKey' => 'server_b',
+                'expectedToolNames' => ['sum_numbers', 'multiply_numbers', 'create_user', 'date_time', 'server_b_tool'],
+            ],
+            'non-existent server includes only global tools' => [
+                'serverKey' => 'non_existent',
+                'expectedToolNames' => ['sum_numbers', 'multiply_numbers', 'create_user', 'date_time'],
+            ],
+        ];
+    }
+
+    /**
+     * @covers ::getTool
+     */
+    public function testGetToolWithServerKey(): void
+    {
+        // Test getting a global tool with any server key - should work
+        $globalTool = $this->registry->getTool('sum_numbers', 'server_a');
+        $this->assertInstanceOf(SumNumbersTool::class, $globalTool);
+
+        // Test getting a server-specific tool with correct server key - should work
+        $serverATool = $this->registry->getTool('server_a_tool', 'server_a');
+        $this->assertInstanceOf(ServerATool::class, $serverATool);
+
+        // Test getting a server-specific tool with wrong server key - should return null
+        $wrongServerTool = $this->registry->getTool('server_a_tool', 'server_b');
+        $this->assertNull($wrongServerTool);
+
+        // Test getting a server-specific tool with no server key - should work (backwards compatibility)
+        $noServerTool = $this->registry->getTool('server_a_tool');
+        $this->assertInstanceOf(ServerATool::class, $noServerTool);
+    }
+
+    /**
+     * @covers ::getToolServerKey
+     */
+    #[DataProvider('provideToolServerKeyData')]
+    public function testGetToolServerKey(string $toolName, ?string $expectedServerKey): void
+    {
+        $serverKey = $this->registry->getToolServerKey($toolName);
+
+        $this->assertSame($expectedServerKey, $serverKey);
+    }
+
+    public static function provideToolServerKeyData(): array
+    {
+        return [
+            'global tool has no server key' => ['sum_numbers', null],
+            'global tool has no server key (multiply)' => ['multiply_numbers', null],
+            'global tool has no server key (create_user)' => ['create_user', null],
+            'global tool has no server key (date_time)' => ['date_time', null],
+            'server_a tool has server_a key' => ['server_a_tool', 'server_a'],
+            'server_b tool has server_b key' => ['server_b_tool', 'server_b'],
+            'non-existent tool returns null' => ['non_existent_tool', null],
         ];
     }
 }

@@ -105,7 +105,7 @@ class EntrypointControllerTest extends WebTestCase
         $this->assertArrayNotHasKey('isError', $resultContent);
 
         $this->assertArrayHasKey('tools', $resultContent);
-        $this->assertCount(4, $resultContent['tools']);
+        $this->assertCount(6, $resultContent['tools']);
 
         $tools = $resultContent['tools'];
 
@@ -118,8 +118,14 @@ class EntrypointControllerTest extends WebTestCase
         $this->assertSame('multiply_numbers', $tools[2]['name']);
         $this->assertSame('Calculates the product of two numbers', $tools[2]['description']);
 
-        $this->assertSame('sum_numbers', $tools[3]['name']);
-        $this->assertSame('Calculates the sum of two numbers', $tools[3]['description']);
+        $this->assertSame('server_a_tool', $tools[3]['name']);
+        $this->assertSame('Tool only available on server A', $tools[3]['description']);
+
+        $this->assertSame('server_b_tool', $tools[4]['name']);
+        $this->assertSame('Tool only available on server B', $tools[4]['description']);
+
+        $this->assertSame('sum_numbers', $tools[5]['name']);
+        $this->assertSame('Calculates the sum of two numbers', $tools[5]['description']);
 
         $this->assertArrayHasKey('inputSchema', $tools[0]);
         $this->assertSame([
@@ -400,7 +406,7 @@ class EntrypointControllerTest extends WebTestCase
         $resultContent = $responseContent['result'];
 
         $this->assertArrayHasKey('prompts', $resultContent);
-        $this->assertCount(3, $resultContent['prompts']);
+        $this->assertCount(5, $resultContent['prompts']);
 
         $prompts = $resultContent['prompts'];
 
@@ -426,6 +432,16 @@ class EntrypointControllerTest extends WebTestCase
         $this->assertSame('say_hello', $prompts[2]['name']);
         $this->assertSame('Says hello', $prompts[2]['description']);
         $this->assertArrayNotHasKey('arguments', $prompts[2]);
+
+        $this->assertSame('server-a-prompt', $prompts[3]['name']);
+        $this->assertSame('Prompt only available on server A', $prompts[3]['description']);
+        $this->assertArrayHasKey('arguments', $prompts[3]);
+        $this->assertCount(1, $prompts[3]['arguments']);
+
+        $this->assertSame('server-b-prompt', $prompts[4]['name']);
+        $this->assertSame('Prompt only available on server B', $prompts[4]['description']);
+        $this->assertArrayHasKey('arguments', $prompts[4]);
+        $this->assertCount(1, $prompts[4]['arguments']);
     }
 
     public function testPromptGet(): void
