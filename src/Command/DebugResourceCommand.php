@@ -35,7 +35,7 @@ class DebugResourceCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('resource', InputArgument::OPTIONAL, 'Resource name');
+            ->addArgument('resource', InputArgument::OPTIONAL, 'Resource URI');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

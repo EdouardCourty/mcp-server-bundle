@@ -385,6 +385,8 @@ class UserResource
         return new ResourceResult([
             new TextResource(
                 uri: 'database://user/' . $id,
+                name: 'user_' . $id,
+                title: 'User data',
                 mimeType: 'application/json',
                 text: $stringifiedUserData,
             ),
