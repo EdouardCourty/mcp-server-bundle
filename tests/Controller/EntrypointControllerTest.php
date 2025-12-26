@@ -152,7 +152,7 @@ class EntrypointControllerTest extends WebTestCase
         ], $tools[0]['annotations']);
 
         $this->assertArrayHasKey('inputSchema', $tools[1]);
-        $this->assertSame([], $tools[1]['inputSchema']);
+        $this->assertEmpty($tools[1]['inputSchema']);
 
         $this->assertArrayHasKey('inputSchema', $tools[2]);
         $this->assertSame([

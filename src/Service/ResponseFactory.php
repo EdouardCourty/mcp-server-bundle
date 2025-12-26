@@ -9,6 +9,7 @@ use Ecourty\McpServerBundle\HttpFoundation\JsonRpcError;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 /**
@@ -46,6 +47,8 @@ class ResponseFactory
     {
         $json = $this->serializer->serialize($response, 'json', [
             AbstractObjectNormalizer::SKIP_NULL_VALUES => true,
+            AbstractObjectNormalizer::PRESERVE_EMPTY_OBJECTS => true,
+            Serializer::EMPTY_ARRAY_AS_OBJECT => true,
         ]);
 
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
