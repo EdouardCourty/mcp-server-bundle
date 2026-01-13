@@ -10,6 +10,7 @@ use Ecourty\McpServerBundle\Event\ToolCallEvent;
 use Ecourty\McpServerBundle\Event\ToolCallExceptionEvent;
 use Ecourty\McpServerBundle\Event\ToolResultEvent;
 use Ecourty\McpServerBundle\Exception\ToolCallException;
+use Ecourty\McpServerBundle\Exception\ToolNotFoundException;
 use Ecourty\McpServerBundle\HttpFoundation\JsonRpcRequest;
 use Ecourty\McpServerBundle\IO\ToolResult;
 use Ecourty\McpServerBundle\Service\InputSanitizer;
@@ -53,7 +54,7 @@ class ToolsCallMethodHandler implements MethodHandlerInterface
         $toolDefinition = $this->toolRegistry->getToolDefinition($toolName);
 
         if ($tool === null) {
-            throw new \InvalidArgumentException(\sprintf('Tool "%s" not found.', $request->params['name']));
+            throw new ToolNotFoundException(\sprintf('Tool "%s" not found.', $request->params['name']));
         }
 
         if ($toolDefinition === null) {
